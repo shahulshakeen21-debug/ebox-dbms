@@ -1,0 +1,176 @@
+Q01)
+select * from bill join meter on meter.id = bill.meter_id
+order by payable_amount;
+
+
+Q02)
+select meter.meter_number, owner_name, address, contact_number from
+building join meter on building.id = meter.building_id
+order by owner_name, meter.meter_number;
+
+
+
+Q03)
+SELECT
+    m.meter_number, b.owner_name,
+    b.address, b.contact_number,
+    bt.name AS building_type_name,
+    ect.connection_name
+FROM meter m
+JOIN building b ON m.building_id = b.id
+JOIN building_type bt ON b.building_type_id = bt.id
+JOIN electricity_connection_type ect ON bt.connection_type_id = ect.id
+ORDER BY b.owner_name ASC, m.meter_number ASC;
+
+
+
+
+Q04)
+SELECT ect.connection_name, s.from_unit, s.to_unit, s.rate
+FROM slab AS s JOIN electricity_connection_type AS ect 
+ON s.connection_type_id = ect.id ORDER BY s.rate ASC;
+
+
+
+
+Q05)
+SELECT
+  b.owner_name, b.address, COUNT(m.id) AS connection_count
+  FROM building AS b JOIN meter AS m ON b.id = m.building_id
+GROUP BY
+  b.id, b.owner_name, b.address
+  ORDER BY b.owner_name ASC;
+
+
+
+
+Q06)
+SELECT bld.owner_name, bld.address, m.meter_number, bl.payable_amount
+FROM bill bl
+JOIN meter m ON bl.meter_id = m.id
+JOIN building bld ON m.building_id = bld.id
+WHERE bl.year = 2017
+  AND bl.month = 12
+  AND bl.fine_amount IS NULL
+ORDER BY bld.owner_name ASC;
+
+
+
+
+Q07)
+SELECT b.owner_name, b.address, m.meter_number, bi.payable_amount
+FROM bill bi
+JOIN meter m ON bi.meter_id = m.id
+JOIN building b ON m.building_id = b.id
+WHERE bi.fine_amount = (SELECT MAX(fine_amount) FROM bill)
+ORDER BY b.owner_name ASC;
+
+
+
+Q08)
+SELECT
+    b.owner_name, b.address, m.meter_number, bi.total_units
+    FROM building AS b
+    JOIN meter AS m ON b.id = m.building_id
+    JOIN bill AS bi ON m.id = bi.meter_id
+    WHERE bi.month = 12 AND bi.year = 2017
+    ORDER BY bi.total_units DESC;
+
+
+
+
+
+
+Q09)
+SELECT
+    bldg.owner_name, SUM(bill.payable_amount) AS "Total BillAmount"
+FROM bill JOIN meter ON bill.meter_id = meter.id
+JOIN building bldg ON meter.building_id = bldg.id
+WHERE YEAR(bill.due_date) = 2017
+GROUP BY bldg.owner_name
+HAVING SUM(bill.payable_amount) = (SELECT MAX(max_amount)
+FROM (SELECT meter_id, SUM(payable_amount) AS max_amount
+FROM bill WHERE YEAR(due_date) = 2017 GROUP BY meter_id) AS subquery)
+ORDER BY bldg.owner_name ASC;
+
+
+
+Q10)
+SELECT b.owner_name, bt.name AS building_type_name,
+    m.meter_number, CASE WHEN bl.payment_date IS NULL THEN 'Not Paid Yet'
+    ELSE CAST(bl.payment_date AS CHAR) END AS Payment_Status
+FROM building b
+INNER JOIN building_type bt ON b.building_type_id = bt.id
+INNER JOIN meter m ON b.id = m.building_id
+INNER JOIN bill bl ON m.id = bl.meter_id
+WHERE bl.month = 12 AND bl.year = 2017
+ORDER BY b.owner_name ASC;
+
+
+
+
+Q11)
+SELECT ect.connection_name, COUNT(m.id) AS connection_count
+FROM electricity_connection_type ect
+JOIN building_type bt ON ect.id = bt.connection_type_id
+JOIN building b ON bt.id = b.building_type_id
+JOIN meter m ON b.id = m.building_id
+GROUP BY ect.connection_name
+ORDER BY connection_count DESC;
+
+
+
+Q12)
+SELECT bt.name, COUNT(b.id) AS number_of_buildings
+FROM building AS b JOIN building_type AS bt ON b.building_type_id = bt.id 
+GROUP BY bt.name HAVING COUNT(b.id) = (SELECT MAX(number_of_buildings) 
+            FROM (SELECT building_type_id, COUNT(id) AS number_of_buildings FROM building
+GROUP BY building_type_id) AS counts) ORDER BY bt.name ASC;
+
+
+
+Q13)
+SELECT m.meter_number, b.owner_name, b.address
+FROM building b
+JOIN meter m ON b.id = m.building_id
+JOIN bill t ON m.id = t.meter_id
+WHERE t.fine_amount > 0
+GROUP BY m.meter_number, b.owner_name, 
+b.address ORDER BY COUNT(t.id) DESC, b.owner_name ASC LIMIT 1;
+
+
+
+Q14)
+SELECT m.meter_number, b.owner_name, b.address
+FROM meter m
+JOIN building b ON m.building_id = b.id
+JOIN bill bl ON m.id = bl.meter_id
+WHERE bl.fine_amount IS NOT NULL -- Ensure we only consider records with a fine amount
+ORDER BY bl.fine_amount ASC
+LIMIT 1 OFFSET 1;
+
+
+
+
+
+Q15)
+SELECT 
+    meter.meter_number,
+    SUM(electricity_reading.total_units) AS month_total_unit,
+    bill.payable_amount,
+    SUM(h6 + h7 + h8 + h9 + h10 + h11) AS morning,
+    SUM(h12 + h13 + h14 + h15) AS afternoon,
+    SUM(h16 + h17 + h18 + h19) AS evening,
+    SUM(h1 + h2 + h3 + h4 + h5 + h20 + h21 + h22 + h23 + h24) AS night
+FROM electricity_reading
+INNER JOIN meter 
+    ON electricity_reading.meter_id = meter.id
+INNER JOIN bill 
+    ON bill.meter_id = meter.id
+WHERE bill.year = 2017 
+  AND bill.month = 12
+GROUP BY 
+    meter.id, 
+    meter.meter_number, 
+    bill.payable_amount
+ORDER BY month_total_unit DESC;
