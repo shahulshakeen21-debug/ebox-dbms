@@ -1,0 +1,101 @@
+Q01)
+create trigger trigger_slab_insert after insert on slab for each row
+begin
+insert into slab_log_history(from_unit, to_unit, rate, action)
+values (new.from_unit, new.to_unit, new.rate, 'Insert_Slab');
+end;
+
+
+Q02)
+CREATE TRIGGER `trigger_electricity_connection_type_insert`
+AFTER INSERT ON `electricity_connection_type`
+FOR EACH ROW
+BEGIN
+    INSERT INTO `electricity_connection_type_log_history` (`connection_name`, `action`)
+    VALUES (NEW.`connection_name`, 'Insert_Electricity_Connection_Type');
+END;
+
+
+Q03)
+CREATE TRIGGER trigger_building_type_insert
+AFTER INSERT ON building_type
+FOR EACH ROW
+BEGIN
+    INSERT INTO building_type_log_history (connection_type_id, name, action)
+    VALUES (NEW.connection_type_id, NEW.name, 'Insert_Building_Type');
+END;
+
+
+Q04)
+CREATE TRIGGER trigger_building_bf_update
+BEFORE UPDATE ON building
+FOR EACH ROW
+BEGIN
+    INSERT INTO building_log_history (contact_number, action)
+    VALUES (OLD.contact_number, 'Before_Update_Building');
+END;
+
+
+
+Q05)
+CREATE TRIGGER trigger_meter_af_update
+AFTER UPDATE ON meter
+FOR EACH ROW
+BEGIN
+    INSERT INTO meter_log_history (meter_number, action)
+    VALUES (NEW.meter_number, 'After_Update_Meter');
+END;
+
+
+
+Q06)
+CREATE TRIGGER trigger_building_type_bf_update
+BEFORE UPDATE ON building_type
+FOR EACH ROW
+BEGIN
+    INSERT INTO building_update_log_history (name, action)
+    VALUES (OLD.name, 'Before_Update_Building_Type');
+END;
+
+
+
+Q07)
+CREATE TRIGGER `trigger_electricity_reading_af_update` AFTER UPDATE ON `electricity_reading`
+FOR EACH ROW
+BEGIN
+    INSERT INTO `electricity_reading_log_history` (`meter_id`, `total_units`, `action`)
+    VALUES (NEW.`meter_id`, NEW.`total_units`, 'After_Update_Electricity_Reading');
+END;
+
+
+
+Q08)
+CREATE TRIGGER trigger_bill_delete
+AFTER DELETE ON bill
+FOR EACH ROW
+BEGIN
+    INSERT INTO bill_log_history (meter_id, payable_amount, action)
+    VALUES (OLD.meter_id, OLD.payable_amount, 'After_Delete_Bill');
+END;
+
+
+
+
+
+Q09)
+CREATE TRIGGER trigger_slab_delete
+AFTER DELETE ON slab
+FOR EACH ROW
+BEGIN
+    INSERT INTO slab_delete_log_history (from_unit, to_unit, rate, action)
+    VALUES (OLD.from_unit, OLD.to_unit, OLD.rate, 'Before_Delete_Slab');
+END;
+
+
+
+Q10)
+create trigger trigger_electricity_reading_delete after delete on electricity_reading
+for each row begin
+insert into electricity_reading_log_history(meter_id, total_units, action)
+values (old.meter_id, old.total_units, 'After_Delete_Electricity_Reading');
+        end;
